@@ -1,3 +1,5 @@
+/* vim: sw=2 ts=2
+ * richo@psych0tik.net */
 #include "pebble_os.h"
 #include "pebble_app.h"
 #include "pebble_fonts.h"
