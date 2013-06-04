@@ -4,10 +4,39 @@
 #include "pebble_app.h"
 #include "pebble_fonts.h"
 
+#include "httppebble-watch/http.c"
+void itoa(int value, char *sp, int radix)
+{
+    char tmp[16];// be careful with the length of the buffer
+    char *tp = tmp;
+    int i;
+    unsigned v;
+    int sign;
+
+    sign = (radix == 10 && value < 0);
+    if (sign)   v = -value;
+    else    v = (unsigned)value;
+
+    while (v || tp == tmp)
+    {
+        i = v % radix;
+        v /= radix; // v/=radix uses less CPU clocks than v=v/radix does
+        if (i < 10)
+          *tp++ = i+'0';
+        else
+          *tp++ = i + 'a' - 10;
+    }
+
+    if (sign)
+    *sp++ = '-';
+    while (tp > tmp)
+    *sp++ = *--tp;
+}
+
 #define APP_NAME "pebblegps"
 
 #define MY_UUID {0x63, 0x98, 0x81, 0x4C, 0xC9, 0x97, 0x47, 0x5A, 0xA2, 0x6A, 0x0D, 0xB8, 0x0A, 0xE1, 0xF1, 0xC0}
-PBL_APP_INFO(MY_UUID,
+PBL_APP_INFO(HTTP_UUID,
             APP_NAME, "richo@psych0tik.net",
              0, 0, /* App version */
              DEFAULT_MENU_ICON,
@@ -21,18 +50,36 @@ void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) 
   (void)recognizer;
   (void)window;
 
+  http_location_request();
   vibes_short_pulse();
+  text_layer_set_text(&gpsLon, "Locating..");
 }
 
-inline void draw_dummy_coords(void) {
-  char *lat = "-37.271634",
-       *lon = "144.205442";
-  text_layer_set_text(&gpsLat, lat);
-  text_layer_set_text(&gpsLon, lon);
+float _abs(float f) {
+  return (f > 0) ? f : -f;
 }
 
-void bottom_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
-  draw_dummy_coords();
+int ftoa(char* str, float f) {
+  /* So much badness will happen if str isn't long enough */
+  static int i;
+  i= (signed int)f;
+  str += mini_itoa(i, 10, 0, str, 0);
+  *str = '.'; str++;
+  str += mini_itoa((signed int)(_abs(f-i) * 1000000), 10, 0, str, 0);
+  *str = 0;
+  return 0; // TODO Actually do something useful
+}
+
+#define LOCATION_LENGTH 33
+void handle_httppebble_location(float latitude, float longitude, float altitude, float accuracy, void* context) {
+  static char lat_text[LOCATION_LENGTH];
+  static char lon_text[LOCATION_LENGTH];
+  ftoa(lat_text, latitude);
+  text_layer_set_text(&gpsLat, lat_text);
+
+  ftoa(lon_text, longitude);
+  text_layer_set_text(&gpsLon, lon_text);
+  vibes_short_pulse();
 }
 
 void click_config_provider(ClickConfig **config, Window *window) {
@@ -40,9 +87,6 @@ void click_config_provider(ClickConfig **config, Window *window) {
 
   config[BUTTON_ID_SELECT]->click.handler = (ClickHandler) select_single_click_handler;
   config[BUTTON_ID_SELECT]->click.repeat_interval_ms = 100;
-
-  config[BUTTON_ID_DOWN]->click.handler = (ClickHandler) bottom_single_click_handler;
-  config[BUTTON_ID_DOWN]->click.repeat_interval_ms = 100;
 }
 
 /* inline void _init_text_layer(TextLayer *textLayer) { */
@@ -73,6 +117,10 @@ void handle_init(AppContextRef ctx) {
 
   layer_add_child(&window.layer, &gpsLat.layer);
   layer_add_child(&window.layer, &gpsLon.layer);
+
+  http_register_callbacks((HTTPCallbacks){
+    .location = handle_httppebble_location,
+    }, NULL);
 
   window_set_click_config_provider(&window, (ClickConfigProvider) click_config_provider);
 }
