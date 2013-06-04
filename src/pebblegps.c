@@ -17,6 +17,11 @@ Window window;
 TextLayer gpsLat;
 TextLayer gpsLon;
 
+enum {
+  LAT_KEY = 0x0,
+  LON_KEY = 0x1,
+};
+
 void select_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
   (void)recognizer;
   (void)window;
