@@ -11,6 +11,8 @@ PBL_APP_INFO(MY_UUID,
              DEFAULT_MENU_ICON,
              APP_INFO_STANDARD_APP);
 
+Window window;
+
 void handle_init(AppContextRef ctx) {
   (void)ctx;
 
