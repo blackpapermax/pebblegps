@@ -1,5 +1,6 @@
 package net.psych0tik.pebblegps;
 
+import android.content.Context;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -33,7 +34,7 @@ public class pebblegpsActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_pebblegps);
+        // setContentView(R.layout.activity_pebblegps);
         mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
     }
 
