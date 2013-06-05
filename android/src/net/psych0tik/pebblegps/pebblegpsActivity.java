@@ -1,7 +1,10 @@
 package net.psych0tik.pebblegps;
 
+import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+
+import android.view.View;
 
 import com.getpebble.android.kit.PebbleKit;
 import com.getpebble.android.kit.util.PebbleDictionary;
