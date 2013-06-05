@@ -14,6 +14,7 @@ import android.app.Activity;
 import android.os.Bundle;
 
 import java.util.UUID;
+import java.lang.Float;
 
 /**
  * Tiny activity which updates the GPS coords of the phone on the watch when
@@ -61,12 +62,12 @@ public class pebblegpsActivity extends Activity {
     public void updatePebbleLocation(Location location) {
         // A very sketchy, rough way of getting the local weather forecast from the phone's approximate location
         // using the OpenWeatherMap webservice: http://openweathermap.org/wiki/API/JSON_API
-        double latitude = location.getLatitude();
-        double longitude = location.getLongitude();
+        float latitude = new Float(location.getLatitude());
+        float longitude = new Float(location.getLongitude());
 
         PebbleDictionary data = new PebbleDictionary();
-        data.addDouble(LAT_KEY, latitude);
-        data.addDouble(LON_KEY, longitude);
+        data.addUint32(LAT_KEY, Float.floatToRawIntBits(latitude));
+        data.addUint32(LON_KEY, Float.floatToRawIntBits(longitude));
 
         PebbleKit.sendDataToPebble(getApplicationContext(), PEBBLEGPS_UUID, data);
     }
