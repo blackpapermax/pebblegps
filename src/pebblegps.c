@@ -5,46 +5,15 @@
 #include "pebble_fonts.h"
 
 #include "httppebble-watch/http.c"
-void itoa(int value, char *sp, int radix)
-{
-    char tmp[16];// be careful with the length of the buffer
-    char *tp = tmp;
-    int i;
-    unsigned v;
-    int sign;
-
-    sign = (radix == 10 && value < 0);
-    if (sign)   v = -value;
-    else    v = (unsigned)value;
-
-    while (v || tp == tmp)
-    {
-        i = v % radix;
-        v /= radix; // v/=radix uses less CPU clocks than v=v/radix does
-        if (i < 10)
-          *tp++ = i+'0';
-        else
-          *tp++ = i + 'a' - 10;
-    }
-
-    if (sign)
-    *sp++ = '-';
-    while (tp > tmp)
-    *sp++ = *--tp;
-}
-
+//
 // https://github.com/mludvig/mini-printf
+#define radix 10
 static unsigned int
-mini_itoa(int value, unsigned int radix, unsigned int uppercase,
-	 char *buffer, unsigned int zero_pad)
+mini_itoa(int value, char *buffer)
 {
 	char	*pbuffer = buffer;
 	int	negative = 0;
 	unsigned int	i, len;
-
-	/* No support for unusual radixes. */
-	if (radix > 16)
-		return 0;
 
 	if (value < 0) {
 		negative = 1;
@@ -54,12 +23,9 @@ mini_itoa(int value, unsigned int radix, unsigned int uppercase,
 	/* This builds the string back to front ... */
 	do {
 		int digit = value % radix;
-		*(pbuffer++) = (digit < 10 ? '0' + digit : (uppercase ? 'A' : 'a') + digit - 10);
+		*(pbuffer++) = (digit < 10 ? '0' + digit : 'a' + digit - 10);
 		value /= radix;
 	} while (value > 0);
-
-	for (i = (pbuffer - buffer); i < zero_pad; i++)
-		*(pbuffer++) = '0';
 
 	if (negative)
 		*(pbuffer++) = '-';
@@ -108,9 +74,9 @@ int ftoa(char* str, float f) {
   /* So much badness will happen if str isn't long enough */
   static int i;
   i= (signed int)f;
-  str += mini_itoa(i, 10, 0, str, 0);
+  str += mini_itoa(i, str);
   *str = '.'; str++;
-  str += mini_itoa((signed int)(_abs(f-i) * 1000000), 10, 0, str, 0);
+  str += mini_itoa((signed int)(_abs(f-i) * 1000000), str);
   *str = 0;
   return 0; // TODO Actually do something useful
 }
