@@ -33,6 +33,51 @@ void itoa(int value, char *sp, int radix)
     *sp++ = *--tp;
 }
 
+// https://github.com/mludvig/mini-printf
+static unsigned int
+mini_itoa(int value, unsigned int radix, unsigned int uppercase,
+	 char *buffer, unsigned int zero_pad)
+{
+	char	*pbuffer = buffer;
+	int	negative = 0;
+	unsigned int	i, len;
+
+	/* No support for unusual radixes. */
+	if (radix > 16)
+		return 0;
+
+	if (value < 0) {
+		negative = 1;
+		value = -value;
+	}
+
+	/* This builds the string back to front ... */
+	do {
+		int digit = value % radix;
+		*(pbuffer++) = (digit < 10 ? '0' + digit : (uppercase ? 'A' : 'a') + digit - 10);
+		value /= radix;
+	} while (value > 0);
+
+	for (i = (pbuffer - buffer); i < zero_pad; i++)
+		*(pbuffer++) = '0';
+
+	if (negative)
+		*(pbuffer++) = '-';
+
+	*(pbuffer) = '\0';
+
+	/* ... now we reverse it (could do it recursively but will
+	 * conserve the stack space) */
+	len = (pbuffer - buffer);
+	for (i = 0; i < len / 2; i++) {
+		char j = buffer[i];
+		buffer[i] = buffer[len-i-1];
+		buffer[len-i-1] = j;
+	}
+
+	return len;
+}
+
 #define APP_NAME "pebblegps"
 
 #define MY_UUID {0x63, 0x98, 0x81, 0x4C, 0xC9, 0x97, 0x47, 0x5A, 0xA2, 0x6A, 0x0D, 0xB8, 0x0A, 0xE1, 0xF1, 0xC0}
